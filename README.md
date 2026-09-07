@@ -1,59 +1,123 @@
-# WcagAngularExercises
+# ModalAccessible
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.3.
+Componente Angular standalone per una finestra modale (dialog) conforme alle linee guida WCAG in materia di gestione del focus da tastiera.
 
-## Development server
+## Funzionalità implementate
 
-To start a local development server, run:
+- **Apertura/chiusura reattiva** tramite `signal` (`isOpen`), senza dipendenze da librerie esterne.
+- **Focus automatico sul titolo** del dialog al momento dell'apertura, per orientare subito l'utente da tastiera e screen reader.
+- **Focus trap** (intrappolamento del focus): con `Tab` e `Shift+Tab` il focus rimane confinato dentro il dialog e non può "sfuggire" verso il contenuto della pagina sottostante.
+- **Chiusura con tasto `Escape`**, comportamento standard atteso in qualsiasi dialog modale.
+- **Ripristino del focus** sul bottone che ha aperto il modal, alla chiusura (via `Escape`, click sulla `✕`, o altro trigger di chiusura).
+- **Attributi ARIA** corretti (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`) per l'annuncio semantico da parte degli screen reader.
+- **Indicatore di focus visibile** (`outline`) tramite `:focus-visible`, per garantire che ogni elemento che riceve focus sia visivamente identificabile durante la navigazione da tastiera.
 
-```bash
-ng serve
+## Struttura del componente
+
+```
+modal-accessible/
+├── modal-accessible.ts       # logica: signal, effect, focus trap, escape
+├── modal-accessible.html     # template con attributi ARIA
+└── modal-accessible.scss     # stile outline focus-visible
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Come funziona
 
-## Code scaffolding
+### 1. Apertura del modal
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```typescript
+openModal() {
+  this.lastFocusedElement = document.activeElement as HTMLElement;
+  this.isOpen.set(true);
+}
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Prima di aprire il dialog, viene salvato l'elemento che aveva il focus (tipicamente il bottone trigger), così da poterlo ripristinare alla chiusura.
 
-```bash
-ng generate --help
+### 2. Focus automatico sul titolo
+
+```typescript
+constructor() {
+  effect(() => {
+    if (this.isOpen()) {
+      setTimeout(() => {
+        this.dialogTitle()?.nativeElement.focus();
+      }, 0);
+    }
+  });
+}
 ```
 
-## Building
+L'`effect` legge `isOpen()` in modo **sincrono**, così Angular può tracciarlo come dipendenza reattiva e rieseguire l'effect ogni volta che il valore cambia. Il `setTimeout` serve ad aspettare che Angular abbia terminato il render del blocco `@if` prima di cercare l'elemento nel DOM.
 
-To build the project run:
+Il titolo (`<h2>`) ha `tabindex="-1"` nel template: questo lo rende **focusabile via JavaScript** ma non raggiungibile tramite `Tab`, in linea con il pattern ARIA "Dialog (Modal)".
 
-```bash
-ng build
+### 3. Focus trap
+
+```typescript
+@HostListener('document:keydown', ['$event'])
+handleKeydown(event: KeyboardEvent): void {
+  if (!this.isOpen()) return;
+
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    this.closeModal();
+    return;
+  }
+
+  if (event.key === 'Tab') {
+    this.trapFocus(event);
+  }
+}
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Quando il modal è aperto, ogni pressione di `Tab` viene intercettata. Se il focus è sull'ultimo elemento focusabile e si preme `Tab`, il focus torna al primo (e viceversa con `Shift+Tab`), impedendo di uscire dal dialog.
 
-## Running unit tests
+Gli elementi focusabili vengono individuati dinamicamente con:
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
+```typescript
+'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 ```
 
-## Running end-to-end tests
+escludendo elementi disabilitati o non visibili (`offsetParent !== null`).
 
-For end-to-end (e2e) testing, run:
+### 4. Chiusura con Escape e ripristino del focus
 
-```bash
-ng e2e
+```typescript
+closeModal() {
+  this.isOpen.set(false);
+  this.lastFocusedElement?.focus();
+}
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Alla chiusura (sia da `Escape` che dal bottone `✕`), il focus torna esattamente sull'elemento che aveva aperto il modal.
 
-## Additional Resources
+## Requisiti WCAG coperti
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Criterio | Descrizione | Come è soddisfatto |
+|---|---|---|
+| 2.1.2 | No Keyboard Trap (con eccezione dialog) | Trap intenzionale con via d'uscita tramite Escape |
+| 2.4.3 | Focus Order | Ordine di tabulazione confinato e logico dentro il dialog |
+| 2.4.7 / 2.4.11 | Focus Visible | Outline esplicito via `:focus-visible` |
+| 4.1.2 | Name, Role, Value | `role="dialog"`, `aria-modal`, `aria-labelledby` |
+
+## Testing
+
+### Manuale (obbligatorio)
+
+1. Apri il modal via mouse o tastiera (`Invio`/`Spazio` sul trigger).
+2. Verifica che il focus vada sul titolo, con outline visibile.
+3. Premi `Tab` ripetutamente: il focus deve restare confinato nel dialog e, arrivato all'ultimo elemento, tornare al primo.
+4. Premi `Shift+Tab` dal primo elemento: deve saltare all'ultimo.
+5. Premi `Escape`: il modal si chiude e il focus torna sul bottone trigger.
+6. (Consigliato) Ripeti il test con uno screen reader (NVDA o VoiceOver) per verificare che il dialog venga annunciato correttamente.
+
+### Nota su WAVE
+
+Lo strumento WAVE non rileva focus trap, focus visibile o comportamento di Escape: questi aspetti richiedono verifica manuale da tastiera. WAVE è utile per controlli complementari (es. `tabindex` positivi, ordine degli elementi nel DOM, presenza di `aria-labelledby` valido).
+
+## Possibili estensioni future
+
+- Gestione di `aria-hidden`/`inert` sul contenuto sottostante quando il modal è aperto.
+- Animazioni di apertura/chiusura rispettose di `prefers-reduced-motion`.
+- Supporto per dialog non modali (senza trap del focus).
