@@ -10,18 +10,18 @@ import { Component , signal, effect, viewChild, ElementRef, HostListener } from 
 export class ModalAccessible {
   isOpen = signal(false);
 
-  // riferimento al titolo dentro il dialog, disponibile solo quando @if è vero
+  // reference to the title inside the dialog, available only when @if is true
   dialogTitle = viewChild<ElementRef<HTMLElement>>('dialogTitle');
 
-  // riferimento al contenitore del dialog (serve per il trap)
+  // reference to the dialog container (needed for the focus trap)
   dialogContainer = viewChild<ElementRef<HTMLElement>>('dialogContainer');
 
-  // dove si trovava il focus prima di aprire il modal
+  // where the focus was before opening the modal
   private lastFocusedElement: HTMLElement | null = null;
 
   constructor() {
     effect(() => {
-      if (this.isOpen()) {  // lettura sincrona → ora isOpen è una dipendenza tracciata
+      if (this.isOpen()) {  // synchronous read → isOpen is now a tracked dependency
         setTimeout(() => {
           this.dialogTitle()?.nativeElement.focus();
         }, 0);
@@ -38,7 +38,8 @@ export class ModalAccessible {
     this.isOpen.set(false);
     this.lastFocusedElement?.focus();
   }
-  //intercetta Escape e Tab solo quando il modal è aperto
+
+  // intercepts Escape and Tab only when the modal is open
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
     if (!this.isOpen()) return;
@@ -54,7 +55,7 @@ export class ModalAccessible {
     }
   }
 
-  //logica del focus trap
+  // focus trap logic
   private trapFocus(event: KeyboardEvent): void {
     const container = this.dialogContainer()?.nativeElement;
     if (!container) return;

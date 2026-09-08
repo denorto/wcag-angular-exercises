@@ -3,11 +3,10 @@
     <span class="badge">WCAG 2.1 AA</span>
     <h1>Accessible Modal</h1>
     <p class="subtitle">
-      Componente Angular standalone con focus trap, gestione ARIA
-      e navigazione completa da tastiera.
+      Standalone Angular component with focus trap, ARIA management, and full keyboard navigation.
     </p>
 
-<button  #triggerBtn (click)="openModal()" class="open-btn">apri modale</button>
+<button  #triggerBtn (click)="openModal()" class="open-btn">open modal</button>
 
     @if (isOpen()) {
         <div class="backdrop">
@@ -15,22 +14,22 @@
                 <div class="wbutton">
                     <button (click)="closeModal()" aria-label="Chiudi finestra">✕</button>
                 </div>
-                <h2 id="modal-title" #dialogTitle tabindex="-1">Modale accessibile</h2>
-                <p>Contenuto della finestra di dialogo.</p>
+                <h2 id="modal-title" #dialogTitle tabindex="-1">Accessible Modal</h2>
+                <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Deleniti nulla quam eligendi eaque temporibus in earum eius reprehenderit impedit esse.</p>
             </div>
         </div>
     }
 
     <p class="hint">
-    Prova con Tab, Shift+Tab ed Escape per verificare il focus trap.
+    Try Tab, Shift+Tab and Escape to test the focus trap.
     </p>
   </div>
 
-  <ul class="features">
-    <li>Focus automatico sul titolo all'apertura</li>
-    <li>Focus trap con Tab / Shift+Tab</li>
-    <li>Chiusura con Escape</li>
-    <li>Ripristino del focus al trigger originale</li>
-    <li>Attributi ARIA corretti (role, aria-modal, aria-labelledby)</li>
-  </ul>
+    <ul class="features">
+    <li>Automatic focus on title when opened</li>
+    <li>Focus trap with Tab / Shift+Tab</li>
+    <li>Closes with Escape</li>
+    <li>Focus restoration to original trigger</li>
+    <li>Correct ARIA attributes (role, aria-modal, aria-labelledby)</li>
+    </ul>
 </main>
