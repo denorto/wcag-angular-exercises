@@ -11,6 +11,7 @@ Standalone Angular component for a modal dialog compliant with WCAG guidelines o
 - Focus restoration to the button that opened the modal, on close (via `Escape`, clicking the ✕, or any other close trigger).
 - Correct ARIA attributes (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`) for proper semantic announcement by screen readers.
 - Visible focus indicator (outline) via `:focus-visible`, ensuring every focused element is visually identifiable during keyboard navigation.
+<img width="741" height="546" alt="image" src="https://github.com/user-attachments/assets/6e877da8-cbfd-48f3-a07a-e392f5e82b39" />
 
 ## Component Structure
 modal-accessible/
