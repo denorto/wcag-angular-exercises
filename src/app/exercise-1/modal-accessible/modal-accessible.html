@@ -1,15 +1,36 @@
-<p>modal-accessible works!</p>
+<main class="page">
+  <div class="hero">
+    <span class="badge">WCAG 2.1 AA</span>
+    <h1>Accessible Modal</h1>
+    <p class="subtitle">
+      Componente Angular standalone con focus trap, gestione ARIA
+      e navigazione completa da tastiera.
+    </p>
 
-<button  #triggerBtn (click)="openModal()">apri modale</button>
+<button  #triggerBtn (click)="openModal()" class="open-btn">apri modale</button>
 
-@if (isOpen()) {
-    <div class="backdrop">
-        <div #dialogContainer class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <div class="wbutton">
-                <button (click)="closeModal()" aria-label="Chiudi finestra">✕</button>
+    @if (isOpen()) {
+        <div class="backdrop">
+            <div #dialogContainer class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+                <div class="wbutton">
+                    <button (click)="closeModal()" aria-label="Chiudi finestra">✕</button>
+                </div>
+                <h2 id="modal-title" #dialogTitle tabindex="-1">Modale accessibile</h2>
+                <p>Contenuto della finestra di dialogo.</p>
             </div>
-            <h2 id="modal-title" #dialogTitle tabindex="-1">Modale accessibile</h2>
-            <p>Contenuto della finestra di dialogo.</p>
         </div>
-    </div>
-}
+    }
+
+    <p class="hint">
+    Prova con Tab, Shift+Tab ed Escape per verificare il focus trap.
+    </p>
+  </div>
+
+  <ul class="features">
+    <li>Focus automatico sul titolo all'apertura</li>
+    <li>Focus trap con Tab / Shift+Tab</li>
+    <li>Chiusura con Escape</li>
+    <li>Ripristino del focus al trigger originale</li>
+    <li>Attributi ARIA corretti (role, aria-modal, aria-labelledby)</li>
+  </ul>
+</main>
